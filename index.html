@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>给你挑个小惊喜</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ① 开场：选风格 -->
+  <section id="view-welcome" class="view active" aria-label="选择你的风格">
+    <header class="hero">
+      <p class="eyebrow">给你挑个小惊喜</p>
+      <h1>嘿，朋友 👋</h1>
+      <p class="sub">先选一个你的风格</p>
+    </header>
+    <div class="choice-row">
+      <button class="choice-card moon" data-category="moon" type="button">
+        <span class="choice-emoji" aria-hidden="true">🌙</span>
+        <span class="choice-name">月亮</span>
+        <span class="choice-tag">浪漫 · 理想系</span>
+      </button>
+      <button class="choice-card penny" data-category="penny" type="button">
+        <span class="choice-emoji" aria-hidden="true">🪙</span>
+        <span class="choice-name">六便士</span>
+        <span class="choice-tag">实用 · 生活系</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ② 礼物列表 -->
+  <section id="view-list" class="view" aria-label="挑选礼物" hidden>
+    <button id="btn-back" class="back-btn" type="button">← 重选风格</button>
+    <header class="list-head">
+      <h2 id="list-title">你选了月亮 🌙</h2>
+      <p class="sub">挑一个你想要的吧</p>
+    </header>
+    <div id="gift-grid" class="gift-grid"></div>
+    <div class="confirm-bar">
+      <button id="btn-confirm" class="confirm-btn" type="button" disabled>确定选它</button>
+    </div>
+  </section>
+
+  <!-- ③ 动画舞台 -->
+  <section id="view-anim" class="view" aria-label="礼物打包运输中" hidden>
+    <div class="stage">
+      <span class="cloud c1" aria-hidden="true">☁️</span>
+      <span class="cloud c2" aria-hidden="true">☁️</span>
+      <div class="ground" aria-hidden="true"></div>
+
+      <div class="box-wrap">
+        <div class="bow" aria-hidden="true">🎀</div>
+        <div class="box-lid" aria-hidden="true"></div>
+        <div class="box-body" aria-hidden="true"><span class="ribbon-v"></span></div>
+        <div class="gift-item" id="anim-gift" aria-hidden="true">🎁</div>
+      </div>
+
+      <div class="sparkles" aria-hidden="true">
+        <span class="sp s1">✨</span>
+        <span class="sp s2">⭐</span>
+        <span class="sp s3">✨</span>
+      </div>
+
+      <div class="truck" aria-hidden="true">
+        <div class="truck-cab"><div class="truck-window"></div></div>
+        <div class="truck-bed">
+          <div class="truck-box">
+            <div class="mini-bow">🎀</div>
+            <div class="mini-lid"></div>
+            <div class="mini-body"></div>
+          </div>
+        </div>
+        <div class="wheel w1"></div>
+        <div class="wheel w2"></div>
+      </div>
+
+      <p class="stage-caption" id="stage-caption">正在打包你的礼物…</p>
+    </div>
+  </section>
+
+  <!-- ④ 结果 -->
+  <section id="view-result" class="view" aria-label="结果" hidden>
+    <div class="result">
+      <div class="result-emoji" id="result-emoji" aria-hidden="true">🎉</div>
+      <h2 id="result-title">收到啦！</h2>
+      <p id="result-sub" class="sub">期待它到你手上</p>
+      <p id="result-gift" class="result-gift"></p>
+      <button id="btn-retry" class="confirm-btn retry" type="button" hidden>没送出去，再试一次</button>
+    </div>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
