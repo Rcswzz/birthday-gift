@@ -141,9 +141,8 @@
       }
       // 匿名登录（只做一次，复用登录态）
       if (!cloudbaseAuthPromise) {
-        cloudbaseAuthPromise = cloudbaseApp
-          .auth({ persistence: "local" })
-          .signInAnonymously();
+        const auth = cloudbaseApp.auth({ persistence: "local" });
+        cloudbaseAuthPromise = auth.anonymousAuthProvider().signIn();
       }
       await cloudbaseAuthPromise;
 
@@ -411,5 +410,6 @@
     showView("intro");
   })();
 })();
+
 
 
