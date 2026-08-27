@@ -91,8 +91,59 @@
     }
   }
 
+  /* ---------- 国内后台：Bmob ---------- */
+
+  async function postToBmob(payload) {
+    const body = {
+      type: payload.type || "gift",
+      category: payload.category || "",
+      giftId: payload.giftId || "",
+      giftName: payload.giftName || "",
+      message: payload.message || "",
+      submittedAt: payload.submittedAt || new Date().toISOString(),
+    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch("https://api2.bmob.cn/1/classes/GiftChoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Bmob-Application-Id": GIFT_CONFIG.BACKEND.bmob.appId,
+          "X-Bmob-REST-API-Key": GIFT_CONFIG.BACKEND.bmob.key,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return true;
+    } catch (err) {
+      console.error("Bmob 提交失败:", err);
+      return false;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  /* ---------- 提交分发：Bmob 优先 → Formspree → 演示模式 ---------- */
+
+  async function sendResult(payload) {
+    if (GIFT_CONFIG.BACKEND.bmob.appId && GIFT_CONFIG.BACKEND.bmob.key) {
+      return postToBmob(payload);
+    }
+    if (
+      GIFT_CONFIG.BACKEND.formspree.formId &&
+      GIFT_CONFIG.BACKEND.formspree.formId !== "YOUR_FORM_ID"
+    ) {
+      return postToFormspree(payload);
+    }
+    // 未配置后台：演示模式，直接成功
+    console.warn("未配置后台，进入演示模式");
+    return true;
+  }
+
   async function sendChoice() {
-    const ok = await postToFormspree({
+    const ok = await sendResult({
       type: "gift",
       category: state.category,
       giftId: state.giftId,
@@ -278,7 +329,7 @@
     }
 
     btn.disabled = true;
-    const ok = await postToFormspree({
+    const ok = await sendResult({
       type: "message",
       category: state.category,
       giftId: state.giftId,
@@ -317,3 +368,4 @@
     showView("intro");
   })();
 })();
+
