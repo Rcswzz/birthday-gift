@@ -10,6 +10,7 @@ const GIFT_CONFIG = {
     cloudbase: {
       envId: "gift-d7gwjyjj1eaa0c987",
       restBase: "https://gift-d7gwjyjj1eaa0c987.api.tcloudbasegateway.com",
+      functionUrl: "https://gift-d7gwjyjj1eaa0c987-1476106106.ap-shanghai.app.tcloudbase.com/submitGift",
     },
     // 备选：Bmob（国内 BaaS）
     bmob: {

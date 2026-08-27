@@ -130,10 +130,29 @@
   /* ---------- 国内后台：腾讯云开发 CloudBase（PG 模式 · 网页直连） ---------- */
 
   async function postToCloudBase(payload) {
-    // 不再依赖云函数：网页匿名登录 → PostgREST 直接写库
     const cfg = GIFT_CONFIG.BACKEND.cloudbase;
+    // 首选：云函数 HTTP 转发（网关自带 CORS 头，无需跨域白名单）
+    if (cfg.functionUrl) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      try {
+        const res = await fetch(cfg.functionUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal,
+        });
+        const data = await res.json().catch(() => ({}));
+        return data && data.ok === true;
+      } catch (err) {
+        console.error("CloudBase 云函数提交失败:", err);
+        return false;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    // 备用：网页直连 PostgREST（需跨域白名单，免费版可能受限）
     try {
-      // 1) 匿名登录，获取 access_token（x-device-id 每次随机生成）
       const loginCtrl = new AbortController();
       const loginTimer = setTimeout(() => loginCtrl.abort(), 10000);
       let token;
@@ -154,8 +173,6 @@
       } finally {
         clearTimeout(loginTimer);
       }
-
-      // 2) 写入数据库（列名与表结构一致：小写下划线）
       const body = {
         type: payload.type || "gift",
         category: payload.category || "",
@@ -183,7 +200,7 @@
         clearTimeout(insTimer);
       }
     } catch (err) {
-      console.error("CloudBase 提交失败:", err);
+      console.error("CloudBase 直连提交失败:", err);
       return false;
     }
   }
@@ -434,6 +451,5 @@
     showView("intro");
   })();
 })();
-
 
 
