@@ -9,6 +9,7 @@ const GIFT_CONFIG = {
     // 控制台创建环境后，把顶部「环境 ID」（形如 gift-xxxxxx）填进来
     cloudbase: {
       envId: "gift-d7gwjyjj1eaa0c987",
+      restBase: "https://gift-d7gwjyjj1eaa0c987.api.tcloudbasegateway.com",
     },
     // 备选：Bmob（国内 BaaS）
     bmob: {

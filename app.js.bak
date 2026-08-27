@@ -127,61 +127,58 @@
 
   /* ---------- 国内后台：腾讯云开发 CloudBase ---------- */
 
-  /* ---------- 国内后台：腾讯云开发 CloudBase（PG 模式 · 网页直连） ---------- */
+  let cloudbaseApp = null;
+  let cloudbaseAuthPromise = null;
 
   async function postToCloudBase(payload) {
-    // 不再依赖云函数：网页匿名登录 → PostgREST 直接写库
-    const cfg = GIFT_CONFIG.BACKEND.cloudbase;
-    try {
-      // 1) 匿名登录，获取 access_token（x-device-id 每次随机生成）
-      const loginCtrl = new AbortController();
-      const loginTimer = setTimeout(() => loginCtrl.abort(), 10000);
-      let token;
+    // 优先：云函数 HTTP 访问（无需安全域名）
+    const fnUrl = GIFT_CONFIG.BACKEND.cloudbase.functionUrl;
+    if (fnUrl) {
       try {
-        const loginRes = await fetch(cfg.restBase + "/auth/v1/signin/anonymously", {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(fnUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-device-id": "web-" + Math.random().toString(36).slice(2, 10),
-          },
-          body: "{}",
-          signal: loginCtrl.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
         });
-        if (!loginRes.ok) throw new Error("登录失败 HTTP " + loginRes.status);
-        const loginData = await loginRes.json();
-        token = loginData.access_token;
-        if (!token) throw new Error("未获取到 access_token");
-      } finally {
-        clearTimeout(loginTimer);
+        clearTimeout(timeout);
+        return res.ok;
+      } catch (err) {
+        console.error("CloudBase 云函数提交失败:", err);
+        return false;
       }
+    }
 
-      // 2) 写入数据库（列名与表结构一致：小写下划线）
-      const body = {
-        type: payload.type || "gift",
-        category: payload.category || "",
-        gift_id: payload.giftId || "",
-        gift_name: payload.giftName || "",
-        message: payload.message || "",
-        submitted_at: payload.submittedAt || new Date().toISOString(),
-      };
-      const insCtrl = new AbortController();
-      const insTimer = setTimeout(() => insCtrl.abort(), 10000);
-      try {
-        const res = await fetch(cfg.restBase + "/v1/rdb/rest/gift_choice?select=id", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-            Prefer: "return=representation",
-          },
-          body: JSON.stringify(body),
-          signal: insCtrl.signal,
-        });
-        if (!res.ok) throw new Error("写入失败 HTTP " + res.status);
-        return true;
-      } finally {
-        clearTimeout(insTimer);
+    // 备用：Web SDK（需要配置安全域名）
+    if (typeof cloudbase === "undefined") {
+      console.error("CloudBase SDK 未加载");
+      return false;
+    }
+    try {
+      if (!cloudbaseApp) {
+        cloudbaseApp = cloudbase.init({ env: GIFT_CONFIG.BACKEND.cloudbase.envId });
       }
+      // 匿名登录（只做一次，复用登录态）
+      if (!cloudbaseAuthPromise) {
+        const auth = cloudbaseApp.auth({ persistence: "local" });
+        cloudbaseAuthPromise = auth.anonymousAuthProvider().signIn();
+      }
+      await cloudbaseAuthPromise;
+
+      const db = cloudbaseApp.database();
+      await db.collection("gift_choice").add({
+        data: {
+          type: payload.type || "gift",
+          category: payload.category || "",
+          giftId: payload.giftId || "",
+          giftName: payload.giftName || "",
+          message: payload.message || "",
+          submittedAt: payload.submittedAt || new Date().toISOString(),
+        },
+      });
+      return true;
     } catch (err) {
       console.error("CloudBase 提交失败:", err);
       return false;
@@ -434,6 +431,7 @@
     showView("intro");
   })();
 })();
+
 
 
 
