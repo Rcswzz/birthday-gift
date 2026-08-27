@@ -131,6 +131,27 @@
   let cloudbaseAuthPromise = null;
 
   async function postToCloudBase(payload) {
+    // 优先：云函数 HTTP 访问（无需安全域名）
+    const fnUrl = GIFT_CONFIG.BACKEND.cloudbase.functionUrl;
+    if (fnUrl) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(fnUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+        return res.ok;
+      } catch (err) {
+        console.error("CloudBase 云函数提交失败:", err);
+        return false;
+      }
+    }
+
+    // 备用：Web SDK（需要配置安全域名）
     if (typeof cloudbase === "undefined") {
       console.error("CloudBase SDK 未加载");
       return false;
@@ -410,6 +431,7 @@
     showView("intro");
   })();
 })();
+
 
 
 
