@@ -1,23 +1,27 @@
 /* ============================================================
-   礼物挑选页 · 苹果 emoji 网感
-   纯白背景 + 大号 emoji 视觉主体 + spring 弹性动效 + squircle 网格
+   生日礼物挑选页 · 明快俏皮版
+   大面积明亮渐变背景 + 白卡片 + 中英俏皮排版 + 漂浮装饰
    ============================================================ */
 
 :root {
-  --bg: #FFFFFF;
-  --ink: #1C1C1E;
-  --sub: #6E6E73;
-  --gray: #F2F2F7;
-  --moon: #FFB300;
-  --moon-soft: #FFF3D6;
-  --penny: #34C759;
-  --penny-soft: #E3F7EA;
-  --accent: #0A84FF;
+  --ink: #2B2B3A;
+  --sub: #8A8A9A;
+  --white: #FFFFFF;
+  --pink: #FF6B9D;
+  --gold: #FFC93C;
+  --mint: #3ECF8E;
+  --sky: #4FC3F7;
+  --violet: #9B7BFF;
 
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --radius-lg: 28px;
+  --radius-lg: 30px;
   --radius-md: 18px;
+
+  --moon-bg: linear-gradient(160deg, #FFF6CE, #FFDF8E);
+  --penny-bg: linear-gradient(160deg, #DDFCEC, #A9F0CE);
+  --moon-glow: rgba(255, 201, 60, 0.30);
+  --penny-glow: rgba(62, 207, 142, 0.28);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,203 +31,279 @@ html, body { height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background: var(--bg);
   color: var(--ink);
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(255, 107, 157, 0.16), transparent 60%),
+    radial-gradient(1000px 600px at -10% 30%, rgba(79, 195, 247, 0.18), transparent 55%),
+    radial-gradient(900px 700px at 50% 115%, rgba(255, 201, 60, 0.16), transparent 60%),
+    linear-gradient(160deg, #FFF3F8 0%, #F0F8FF 48%, #FFF9E6 100%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 主题变量：按所选类别切换 */
-body[data-cat="moon"]  { --cat: var(--moon);  --cat-soft: var(--moon-soft); }
-body[data-cat="penny"] { --cat: var(--penny); --cat-soft: var(--penny-soft); }
+body[data-cat="moon"]  { --cat: #FFB300; --cat-soft: #FFF3D6; --cat-grad: var(--moon-bg); --cat-glow: var(--moon-glow); }
+body[data-cat="penny"] { --cat: #2DBB7D; --cat-soft: #E3F7EA; --cat-grad: var(--penny-bg); --cat-glow: var(--penny-glow); }
+
+/* ---------- 漂浮装饰 ---------- */
+
+.floaties { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.floaty {
+  position: absolute;
+  font-size: 34px;
+  opacity: 0.85;
+  animation: floaty 9s ease-in-out infinite;
+}
+.floaty.f1 { top: 6%;  left: 6%;  animation-delay: 0s; }
+.floaty.f2 { top: 12%; right: 8%; font-size: 22px; animation-delay: 1.2s; }
+.floaty.f3 { top: 45%; left: 3%;  font-size: 26px; animation-delay: 2.4s; }
+.floaty.f4 { top: 58%; right: 5%; font-size: 20px; animation-delay: 0.6s; }
+.floaty.f5 { top: 78%; left: 8%;  animation-delay: 3.4s; }
+.floaty.f6 { top: 82%; right: 10%; font-size: 26px; animation-delay: 1.8s; }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-18px) rotate(5deg); }
+}
 
 /* ---------- 通用 ---------- */
 
 .view {
+  position: relative;
+  z-index: 1;
   display: none;
   flex-direction: column;
-  max-width: 480px;
+  max-width: 520px;
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 24px 20px calc(28px + env(safe-area-inset-bottom));
+  padding: 28px 24px calc(32px + env(safe-area-inset-bottom));
 }
 .view.active { display: flex; }
 
-.sub { color: var(--sub); font-size: 15px; font-weight: 500; }
+.sub { color: var(--sub); font-size: 15px; font-weight: 500; line-height: 1.6; }
 
 :focus-visible {
-  outline: 3px solid rgba(10, 132, 255, 0.55);
+  outline: 3px solid rgba(255, 107, 157, 0.5);
   outline-offset: 2px;
 }
 
 button { font: inherit; color: inherit; }
 
-/* ---------- 动画工具 ---------- */
-
 @keyframes pop-in {
-  from { opacity: 0; transform: translateY(18px) scale(0.92); }
+  from { opacity: 0; transform: translateY(20px) scale(0.94); }
   to   { opacity: 1; transform: none; }
+}
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
 }
 
 /* ============================================================
-   ① 开场：月亮 / 六便士
+   ① 开场铺垫
    ============================================================ */
 
-#view-welcome {
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  gap: 30px;
+#view-intro { justify-content: center; align-items: center; text-align: center; }
+
+.intro { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+
+.intro-line {
+  font-size: clamp(22px, 6.5vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1.5;
+  opacity: 0;
+  animation: pop-in 0.7s var(--spring) both;
 }
+.intro-line.l1 { animation-delay: 0.2s; }
+.intro-line.l2 { animation-delay: 1.0s; color: var(--pink); }
+.intro-line.l3 { animation-delay: 1.8s; }
+
+.start-btn {
+  margin-top: 18px;
+  padding: 18px 44px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--pink), #FF9F43);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(255, 107, 157, 0.35);
+  opacity: 0;
+  animation: pop-in 0.6s var(--spring) 2.6s both;
+  transition: transform 0.2s var(--spring), box-shadow 0.2s ease;
+}
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(255, 107, 157, 0.42); }
+.start-btn:active { transform: scale(0.95); }
+
+/* ============================================================
+   ② 选风格
+   ============================================================ */
+
+#view-welcome { justify-content: center; align-items: center; text-align: center; gap: 34px; }
 
 .hero .eyebrow {
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: var(--sub);
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--pink);
 }
 
 .hero h1 {
-  margin-top: 8px;
-  font-size: clamp(30px, 9vw, 38px);
-  font-weight: 800;
-  letter-spacing: -0.5px;
+  margin-top: 12px;
+  font-size: clamp(34px, 10vw, 52px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1.15;
 }
 
-.hero .sub { margin-top: 8px; font-size: 16px; }
+.hero .sub { margin-top: 12px; font-size: 16px; }
 
-.choice-row {
-  display: flex;
-  gap: 14px;
-  width: 100%;
-  max-width: 400px;
-}
+.choice-row { display: flex; gap: 16px; width: 100%; max-width: 440px; }
 
 .choice-card {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 9px;
-  padding: 30px 10px 24px;
+  gap: 12px;
+  padding: 34px 12px 28px;
   border: none;
   border-radius: var(--radius-lg);
+  background: var(--white);
   cursor: pointer;
   transition: transform 0.25s var(--spring), box-shadow 0.25s ease;
   animation: pop-in 0.6s var(--spring) both;
 }
-.choice-card.penny { animation-delay: 0.08s; }
+.choice-card.penny { animation-delay: 0.1s; }
 
-.choice-card.moon {
-  background: linear-gradient(160deg, #FFF6DC, #FFE6AC);
-  box-shadow: 0 12px 26px rgba(255, 179, 0, 0.24);
-}
-.choice-card.penny {
-  background: linear-gradient(160deg, #E8FAF0, #D0F1DE);
-  box-shadow: 0 12px 26px rgba(52, 199, 89, 0.20);
-}
-.choice-card:hover { transform: translateY(-3px); }
+.choice-card.moon  { box-shadow: 0 18px 40px var(--moon-glow); }
+.choice-card.penny { box-shadow: 0 18px 40px var(--penny-glow); }
+.choice-card:hover { transform: translateY(-4px); }
 .choice-card:active { transform: scale(0.94); }
 
-.choice-emoji { font-size: 58px; line-height: 1; }
-.choice-name  { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; }
-.choice-tag   { font-size: 12px; font-weight: 600; color: rgba(28, 28, 30, 0.55); }
+.choice-emoji { font-size: 62px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(43, 43, 58, 0.12)); }
+.choice-name  { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
+.choice-name em {
+  display: block;
+  margin-top: 3px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--sub);
+}
+.choice-tag {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.choice-card.moon  .choice-tag { background: #FFF3CE; }
+.choice-card.penny .choice-tag { background: #DDFCEC; }
 
 /* ============================================================
-   ② 礼物列表
+   ③ 礼物列表
    ============================================================ */
 
 #view-list.active { padding-top: 20px; }
 
 .back-btn {
   align-self: flex-start;
-  padding: 8px 14px;
+  padding: 9px 16px;
   border: none;
   border-radius: 999px;
-  background: var(--gray);
+  background: var(--white);
+  box-shadow: 0 6px 16px rgba(43, 43, 58, 0.08);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: transform 0.2s var(--spring);
 }
 .back-btn:active { transform: scale(0.94); }
 
-.list-head { margin-top: 16px; }
+.list-head { margin-top: 22px; }
 
 .list-head h2 {
-  font-size: clamp(24px, 7vw, 28px);
-  font-weight: 800;
-  letter-spacing: -0.4px;
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 900;
+  letter-spacing: -1px;
 }
-.list-head .sub { margin-top: 4px; }
+.list-head .sub { margin-top: 6px; }
 
 .gift-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 22px;
+  gap: 16px;
+  margin-top: 26px;
 }
 
 .gift-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 24px 10px 20px;
-  border: 2px solid transparent;
+  gap: 12px;
+  padding: 28px 12px 22px;
+  border: 2.5px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--gray);
+  background: var(--white);
+  box-shadow: 0 10px 24px rgba(43, 43, 58, 0.07);
   cursor: pointer;
   transition: transform 0.2s var(--spring), border-color 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease, box-shadow 0.2s ease;
   animation: pop-in 0.5s var(--spring) both;
-  animation-delay: calc(var(--i, 0) * 60ms);
+  animation-delay: calc(var(--i, 0) * 70ms);
 }
+.gift-card:hover { transform: translateY(-3px); }
 .gift-card:active { transform: scale(0.95); }
-.gift-card:hover { transform: translateY(-2px); }
 
 .gift-card.selected {
   border-color: var(--cat);
   background: var(--cat-soft);
+  box-shadow: 0 14px 32px var(--cat-glow);
   transform: translateY(-3px) scale(1.03);
 }
 
-.gift-emoji { font-size: 48px; line-height: 1; }
-.gift-name  { font-size: 15px; font-weight: 700; text-align: center; }
+.gift-emoji { font-size: 54px; line-height: 1; }
+.gift-name  { font-size: 16px; font-weight: 800; text-align: center; }
 
 .confirm-bar {
   position: sticky;
-  bottom: calc(14px + env(safe-area-inset-bottom));
+  bottom: calc(16px + env(safe-area-inset-bottom));
   margin-top: auto;
-  padding-top: 18px;
+  padding-top: 20px;
 }
 
 .confirm-btn {
   width: 100%;
-  padding: 16px;
+  padding: 18px;
   border: none;
   border-radius: 999px;
-  background: var(--cat, var(--accent));
+  background: linear-gradient(135deg, var(--pink), #FF9F43);
   color: #fff;
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(28, 28, 30, 0.14);
-  transition: transform 0.2s var(--spring), opacity 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: 0 14px 30px rgba(255, 107, 157, 0.30);
+  transition: transform 0.2s var(--spring), opacity 0.2s ease, box-shadow 0.2s ease;
 }
 .confirm-btn:disabled {
-  background: #C7C7CC;
+  background: #D9D9E3;
   box-shadow: none;
-  opacity: 0.65;
+  opacity: 0.7;
   cursor: default;
 }
-.confirm-btn:not(:disabled):hover { transform: translateY(-1px); }
+.confirm-btn:not(:disabled):hover { transform: translateY(-2px); }
 .confirm-btn:not(:disabled):active { transform: scale(0.97); }
 
+.confirm-btn.small { width: auto; padding: 12px 26px; font-size: 15px; }
+
 /* ============================================================
-   ③ 动画舞台
+   ④ 动画舞台
    ============================================================ */
 
 #view-anim { justify-content: center; align-items: center; padding: 16px; }
@@ -231,30 +311,33 @@ button { font: inherit; color: inherit; }
 .stage {
   position: relative;
   width: 100%;
-  max-width: 430px;
+  max-width: 440px;
   height: min(74vh, 560px);
   min-height: 380px;
   border-radius: 32px;
-  background: linear-gradient(180deg, #EAF6FF 0%, #F8FBFF 55%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #D9EDFF 0%, #FBF3FF 52%, #FFFCE9 100%);
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(28, 28, 30, 0.08);
+  box-shadow: 0 24px 60px rgba(43, 43, 58, 0.12);
 }
 
 .ground {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 24%;
-  background: linear-gradient(180deg, #F2F7F3, #E6EFE9);
-  border-top: 2px solid rgba(28, 28, 30, 0.05);
+  background: linear-gradient(180deg, #E9FBEF, #D3F2DC);
+  border-top: 2px solid rgba(43, 43, 58, 0.06);
 }
 
-.cloud { position: absolute; font-size: 42px; opacity: 0.75; animation: drift 16s linear infinite; }
+.cloud { position: absolute; font-size: 42px; opacity: 0.8; animation: drift 16s linear infinite; }
 .cloud.c1 { top: 8%;  left: 8%; }
 .cloud.c2 { top: 20%; left: 55%; animation-delay: 5s; animation-duration: 20s; }
 @keyframes drift {
   from { transform: translateX(-70px); }
   to   { transform: translateX(480px); }
 }
+
+.balloon { position: absolute; font-size: 44px; opacity: 0.9; animation: bounce-soft 4s ease-in-out infinite; }
+.balloon.b1 { top: 10%; right: 10%; }
 
 /* --- 礼物盒 --- */
 
@@ -348,7 +431,7 @@ button { font: inherit; color: inherit; }
 .truck-cab {
   position: relative;
   width: 62px; height: 52px;
-  background: linear-gradient(180deg, #3FA7FF, #0A84FF);
+  background: linear-gradient(180deg, #6FC4FF, #2FA8F0);
   border-radius: 14px 8px 0 0;
 }
 .truck-window {
@@ -361,14 +444,14 @@ button { font: inherit; color: inherit; }
 .truck-bed {
   position: relative;
   width: 128px; height: 58px;
-  background: linear-gradient(180deg, #2E8BFF, #0A84FF);
+  background: linear-gradient(180deg, #54B8F8, #2FA8F0);
   border-radius: 8px 14px 0 0;
 }
 .wheel {
   position: absolute;
   bottom: -10px;
   width: 26px; height: 26px;
-  background: #1C1C1E;
+  background: #2B2B3A;
   border-radius: 50%;
   box-shadow: inset 0 0 0 6px #fff;
 }
@@ -410,7 +493,7 @@ button { font: inherit; color: inherit; }
   left: 0; right: 0; bottom: 6%;
   text-align: center;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--sub);
   z-index: 6;
 }
@@ -471,7 +554,7 @@ button { font: inherit; color: inherit; }
 }
 
 /* ============================================================
-   ④ 结果页
+   ⑤ 结果页 + 留言
    ============================================================ */
 
 #view-result { justify-content: center; align-items: center; text-align: center; }
@@ -481,17 +564,61 @@ button { font: inherit; color: inherit; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  width: 100%;
 }
-.result-emoji { font-size: 74px; line-height: 1; animation: pop-in 0.7s var(--spring) both; }
-.result h2 { font-size: clamp(26px, 7vw, 30px); font-weight: 800; letter-spacing: -0.4px; }
+.result-emoji { font-size: 78px; line-height: 1; animation: pop-in 0.7s var(--spring) both; }
+.result h2 { font-size: clamp(30px, 9vw, 38px); font-weight: 900; letter-spacing: -1px; }
 .result .sub { margin-top: 2px; font-size: 16px; }
-.result-gift { margin-top: 6px; font-size: 15px; font-weight: 600; color: var(--sub); }
-
-.retry {
-  max-width: 260px;
-  margin-top: 18px;
-  background: var(--accent);
+.result-gift {
+  margin-top: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 0 8px 20px rgba(43, 43, 58, 0.08);
+  font-size: 15px;
+  font-weight: 800;
 }
+
+/* 留言区 */
+.message-box {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 26px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: 0 14px 34px rgba(43, 43, 58, 0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+#msg-input {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #EFEFF5;
+  border-radius: var(--radius-md);
+  background: #FAFAFD;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+#msg-input:focus {
+  outline: none;
+  border-color: var(--pink);
+  background: #fff;
+}
+.msg-status { font-size: 14px; font-weight: 700; color: var(--mint); }
+.msg-status.error { color: var(--pink); }
+
+.retry { max-width: 280px; margin-top: 18px; }
 
 /* ============================================================
    减弱动态效果

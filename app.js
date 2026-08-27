@@ -1,6 +1,6 @@
 /* ============================================================
-   礼物挑选页 · 交互逻辑
-   状态机：welcome → list → anim → result
+   生日礼物挑选页 · 交互逻辑
+   状态机：intro → welcome → list → anim → result(+留言)
    ============================================================ */
 (() => {
   "use strict";
@@ -12,18 +12,21 @@
 
   const CHOICE_KEY = "giftChoice";
   const SENT_KEY = "giftSent";
+  const MSG_KEY = "giftMsgSent";
 
   const state = {
     category: null,
     giftId: null,
     giftName: null,
     sent: localStorage.getItem(SENT_KEY) === "1",
+    msgSent: localStorage.getItem(MSG_KEY) === "1",
     submitting: false,
   };
 
   const $ = (sel) => document.querySelector(sel);
 
   const views = {
+    intro: $("#view-intro"),
     welcome: $("#view-welcome"),
     list: $("#view-list"),
     anim: $("#view-anim"),
@@ -65,7 +68,48 @@
     );
   }
 
-  /* ---------- ① 开场 ---------- */
+  /* ---------- 数据提交（Formspree） ---------- */
+
+  async function postToFormspree(payload) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch("https://formspree.io/f/" + GIFT_CONFIG.FORM_ID, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return true;
+    } catch (err) {
+      // 网络失败或表单 ID 未配置：界面会给出重试
+      console.error("提交失败:", err);
+      return false;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async function sendChoice() {
+    const ok = await postToFormspree({
+      type: "gift",
+      category: state.category,
+      giftId: state.giftId,
+      giftName: state.giftName,
+      submittedAt: new Date().toISOString(),
+    });
+    if (ok) {
+      state.sent = true;
+      localStorage.setItem(SENT_KEY, "1");
+    }
+  }
+
+  /* ---------- ① 开场铺垫 ---------- */
+
+  $("#btn-start").addEventListener("click", () => showView("welcome"));
+
+  /* ---------- ② 选风格 ---------- */
 
   document.querySelectorAll(".choice-card").forEach((card) => {
     card.addEventListener("click", () => openList(card.dataset.category));
@@ -81,7 +125,7 @@
     showView("list");
   }
 
-  /* ---------- ② 礼物列表 ---------- */
+  /* ---------- ③ 礼物列表 ---------- */
 
   function renderGifts(category) {
     const grid = $("#gift-grid");
@@ -122,36 +166,7 @@
     playAnimation();   // 播放动画
   });
 
-  /* ---------- 数据提交（Formspree） ---------- */
-
-  async function sendChoice() {
-    const payload = {
-      category: state.category,
-      giftId: state.giftId,
-      giftName: state.giftName,
-      submittedAt: new Date().toISOString(),
-    };
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    try {
-      const res = await fetch("https://formspree.io/f/" + GIFT_CONFIG.FORM_ID, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      state.sent = true;
-      localStorage.setItem(SENT_KEY, "1");
-    } catch (err) {
-      // 网络失败或表单 ID 未配置：结果页会显示重试
-      console.error("提交失败:", err);
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  /* ---------- ③ 动画 ---------- */
+  /* ---------- ④ 动画 ---------- */
 
   const PHASES = [
     { cls: "phase-pop",       at: 0,    caption: "正在打包你的礼物…" },
@@ -175,7 +190,6 @@
     $("#anim-gift").textContent = gift ? gift.emoji : "🎁";
     $("#stage-caption").textContent = "正在打包你的礼物…";
 
-    // 清掉上一轮的定时器与阶段类
     animTimers.forEach(clearTimeout);
     animTimers = [];
     PHASES.forEach((p) => stage.classList.remove(p.cls));
@@ -198,7 +212,7 @@
     animTimers.push(setTimeout(showResult, ANIM_END));
   }
 
-  /* ---------- ④ 结果页 ---------- */
+  /* ---------- ⑤ 结果页 + 留言 ---------- */
 
   function showResult() {
     const stored = readStoredChoice();
@@ -206,20 +220,87 @@
 
     $("#result-emoji").textContent = state.sent ? "🎉" : "🎁";
     $("#result-title").textContent = state.sent ? "收到啦！" : "你已经选好啦";
-    $("#result-sub").textContent = state.sent ? "期待它到你手上" : "刚才没送出去";
+    $("#result-sub").textContent = state.sent
+      ? "期待它到你手上 · It's coming to you!"
+      : "刚才没送出去 · Something went wrong";
+
     $("#result-gift").textContent = giftName ? "你选的是：" + giftName : "";
 
     const retry = $("#btn-retry");
     retry.hidden = state.sent;
     retry.disabled = false;
+
+    renderMessageBox();
     showView("result");
   }
 
   $("#btn-retry").addEventListener("click", async () => {
     const retry = $("#btn-retry");
     retry.disabled = true;
+    state.submitting = false;
     await sendChoice();
     showResult();
+  });
+
+  /* 留言区 */
+  function renderMessageBox() {
+    const box = $("#message-box");
+    const status = $("#msg-status");
+    const input = $("#msg-input");
+    const btn = $("#btn-send-msg");
+
+    if (state.msgSent) {
+      status.textContent = "💌 已送达，你的祝福我会转达！";
+      status.className = "msg-status";
+      status.hidden = false;
+      input.disabled = true;
+      btn.disabled = true;
+      btn.textContent = "已送出 ✓";
+    } else {
+      status.hidden = true;
+      input.disabled = false;
+      btn.disabled = false;
+      btn.textContent = "送出祝福 💌";
+    }
+  }
+
+  $("#btn-send-msg").addEventListener("click", async () => {
+    const input = $("#msg-input");
+    const status = $("#msg-status");
+    const msg = input.value.trim();
+    const btn = $("#btn-send-msg");
+
+    if (!msg) {
+      status.textContent = "先写点祝福再送出吧 ✏️";
+      status.className = "msg-status error";
+      status.hidden = false;
+      return;
+    }
+
+    btn.disabled = true;
+    const ok = await postToFormspree({
+      type: "message",
+      category: state.category,
+      giftId: state.giftId,
+      giftName: state.giftName,
+      message: msg,
+      submittedAt: new Date().toISOString(),
+    });
+
+    if (ok) {
+      state.msgSent = true;
+      localStorage.setItem(MSG_KEY, "1");
+      status.textContent = "💌 已送达，你的祝福我会转达！";
+      status.className = "msg-status";
+      status.hidden = false;
+      input.disabled = true;
+      btn.textContent = "已送出 ✓";
+    } else {
+      status.textContent = "没送出去，再试一次";
+      status.className = "msg-status error";
+      status.hidden = false;
+      btn.disabled = false;
+    }
   });
 
   /* ---------- 启动 ---------- */
@@ -233,7 +314,6 @@
       showResult();
       return;
     }
-    showView("welcome");
+    showView("intro");
   })();
 })();
-

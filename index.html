@@ -4,50 +4,71 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no" />
-  <title>给你挑个小惊喜</title>
+  <title>Happy Birthday 🎂 给你挑个小惊喜</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ① 开场：选风格 -->
-  <section id="view-welcome" class="view active" aria-label="选择你的风格">
+  <!-- 漂浮装饰 -->
+  <div class="floaties" aria-hidden="true">
+    <span class="floaty f1">🎈</span>
+    <span class="floaty f2">✨</span>
+    <span class="floaty f3">🎈</span>
+    <span class="floaty f4">⭐</span>
+    <span class="floaty f5">🎈</span>
+    <span class="floaty f6">🎂</span>
+  </div>
+
+  <!-- ① 开场铺垫 -->
+  <section id="view-intro" class="view active" aria-label="开场">
+    <div class="intro">
+      <p class="intro-line l1">叮咚！有一份惊喜正在路上 🔔</p>
+      <p class="intro-line l2">今天是你的生日 🎂 Happy Birthday!</p>
+      <p class="intro-line l3">我准备了一份小心意，藏在下面 👇</p>
+      <button id="btn-start" class="start-btn" type="button">开始挑选 🎁</button>
+    </div>
+  </section>
+
+  <!-- ② 选风格 -->
+  <section id="view-welcome" class="view" aria-label="选择你的风格" hidden>
     <header class="hero">
-      <p class="eyebrow">给你挑个小惊喜</p>
-      <h1>嘿，朋友 👋</h1>
-      <p class="sub">先选一个你的风格</p>
+      <p class="eyebrow">MOON OR PENNY?</p>
+      <h1>月亮，还是六便士？</h1>
+      <p class="sub">选一个你的风格，让我猜猜你的心 · Choose your vibe</p>
     </header>
     <div class="choice-row">
       <button class="choice-card moon" data-category="moon" type="button">
         <span class="choice-emoji" aria-hidden="true">🌙</span>
-        <span class="choice-name">月亮</span>
+        <span class="choice-name">月亮<em>Moon</em></span>
         <span class="choice-tag">浪漫 · 理想系</span>
       </button>
       <button class="choice-card penny" data-category="penny" type="button">
         <span class="choice-emoji" aria-hidden="true">🪙</span>
-        <span class="choice-name">六便士</span>
+        <span class="choice-name">六便士<em>Penny</em></span>
         <span class="choice-tag">实用 · 生活系</span>
       </button>
     </div>
   </section>
 
-  <!-- ② 礼物列表 -->
+  <!-- ③ 礼物列表 -->
   <section id="view-list" class="view" aria-label="挑选礼物" hidden>
     <button id="btn-back" class="back-btn" type="button">← 重选风格</button>
     <header class="list-head">
       <h2 id="list-title">你选了月亮 🌙</h2>
-      <p class="sub">挑一个你想要的吧</p>
+      <p class="sub">浪漫与理想，都在这里等你 · Take your pick</p>
     </header>
     <div id="gift-grid" class="gift-grid"></div>
     <div class="confirm-bar">
-      <button id="btn-confirm" class="confirm-btn" type="button" disabled>确定选它</button>
+      <button id="btn-confirm" class="confirm-btn" type="button" disabled>就它啦，确定！🎁</button>
     </div>
   </section>
 
-  <!-- ③ 动画舞台 -->
+  <!-- ④ 动画舞台 -->
   <section id="view-anim" class="view" aria-label="礼物打包运输中" hidden>
     <div class="stage">
       <span class="cloud c1" aria-hidden="true">☁️</span>
       <span class="cloud c2" aria-hidden="true">☁️</span>
+      <span class="balloon b1" aria-hidden="true">🎈</span>
       <div class="ground" aria-hidden="true"></div>
 
       <div class="box-wrap">
@@ -80,13 +101,21 @@
     </div>
   </section>
 
-  <!-- ④ 结果 -->
+  <!-- ⑤ 结果 + 留言 -->
   <section id="view-result" class="view" aria-label="结果" hidden>
     <div class="result">
       <div class="result-emoji" id="result-emoji" aria-hidden="true">🎉</div>
       <h2 id="result-title">收到啦！</h2>
-      <p id="result-sub" class="sub">期待它到你手上</p>
+      <p id="result-sub" class="sub">期待它到你手上 · It's coming to you!</p>
       <p id="result-gift" class="result-gift"></p>
+
+      <div class="message-box" id="message-box">
+        <label class="msg-label" for="msg-input">给你的祝福写句话吧 💌</label>
+        <textarea id="msg-input" rows="3" maxlength="200" placeholder="想对我说点悄悄话吗？(选填)"></textarea>
+        <button id="btn-send-msg" class="confirm-btn small" type="button">送出祝福 💌</button>
+        <p id="msg-status" class="msg-status" hidden></p>
+      </div>
+
       <button id="btn-retry" class="confirm-btn retry" type="button" hidden>没送出去，再试一次</button>
     </div>
   </section>
