@@ -5,8 +5,12 @@
 // ============================================================
 const GIFT_CONFIG = {
   BACKEND: {
-    // 国内首选：Bmob（https://www.bmob.cn）注册后创建应用，
-    // 在「设置 → 应用密钥」里复制 Application ID 和 REST API Key 填进来
+    // 首选：腾讯云开发 CloudBase（微信扫码注册，国内可达）
+    // 控制台创建环境后，把顶部「环境 ID」（形如 gift-xxxxxx）填进来
+    cloudbase: {
+      envId: "gift-d7gwjyjj1eaa0c987",
+    },
+    // 备选：Bmob（国内 BaaS）
     bmob: {
       appId: "", // TODO: Bmob Application ID
       key: "",   // TODO: Bmob REST API Key
@@ -34,3 +38,5 @@ const GIFT_CONFIG = {
     ],
   },
 };
+
+

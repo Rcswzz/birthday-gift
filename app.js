@@ -125,9 +125,52 @@
     }
   }
 
-  /* ---------- 提交分发：Bmob 优先 → Formspree → 演示模式 ---------- */
+  /* ---------- 国内后台：腾讯云开发 CloudBase ---------- */
+
+  let cloudbaseApp = null;
+  let cloudbaseAuthPromise = null;
+
+  async function postToCloudBase(payload) {
+    if (typeof cloudbase === "undefined") {
+      console.error("CloudBase SDK 未加载");
+      return false;
+    }
+    try {
+      if (!cloudbaseApp) {
+        cloudbaseApp = cloudbase.init({ env: GIFT_CONFIG.BACKEND.cloudbase.envId });
+      }
+      // 匿名登录（只做一次，复用登录态）
+      if (!cloudbaseAuthPromise) {
+        cloudbaseAuthPromise = cloudbaseApp
+          .auth({ persistence: "local" })
+          .signInAnonymously();
+      }
+      await cloudbaseAuthPromise;
+
+      const db = cloudbaseApp.database();
+      await db.collection("gift_choice").add({
+        data: {
+          type: payload.type || "gift",
+          category: payload.category || "",
+          giftId: payload.giftId || "",
+          giftName: payload.giftName || "",
+          message: payload.message || "",
+          submittedAt: payload.submittedAt || new Date().toISOString(),
+        },
+      });
+      return true;
+    } catch (err) {
+      console.error("CloudBase 提交失败:", err);
+      return false;
+    }
+  }
+
+  /* ---------- 提交分发：CloudBase → Bmob → Formspree → 演示模式 ---------- */
 
   async function sendResult(payload) {
+    if (GIFT_CONFIG.BACKEND.cloudbase.envId) {
+      return postToCloudBase(payload);
+    }
     if (GIFT_CONFIG.BACKEND.bmob.appId && GIFT_CONFIG.BACKEND.bmob.key) {
       return postToBmob(payload);
     }
@@ -368,4 +411,5 @@
     showView("intro");
   })();
 })();
+
 
