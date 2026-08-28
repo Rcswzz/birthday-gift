@@ -28,6 +28,7 @@
   const views = {
     intro: $("#view-intro"),
     welcome: $("#view-welcome"),
+    quiz: $("#view-quiz"),
     list: $("#view-list"),
     anim: $("#view-anim"),
     result: $("#view-result"),
@@ -241,7 +242,96 @@
 
   /* ---------- ① 开场铺垫 ---------- */
 
-  $("#btn-start").addEventListener("click", () => showView("welcome"));
+    /* ---------- ① 开场：生日倒计时 + BGM ---------- */
+
+  const BIRTHDAY = new Date("2026-10-05T00:00:00+08:00");
+
+  function updateCountdown() {
+    const diff = BIRTHDAY.getTime() - Date.now();
+    const daysEl = $("#count-days");
+    const hoursEl = $("#count-hours");
+    if (!daysEl || !hoursEl) return;
+    if (diff <= 0) {
+      daysEl.textContent = "0";
+      hoursEl.textContent = "00";
+      return;
+    }
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    daysEl.textContent = days;
+    hoursEl.textContent = String(hours).padStart(2, "0");
+  }
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+
+  // BGM
+  const bgm = $("#bgm");
+  let musicOn = false;
+
+  function startMusic() {
+    const btnMusic = $("#btn-music");
+    btnMusic.hidden = false;
+    if (!bgm) return;
+    bgm.volume = 0.55;
+    bgm.play().then(() => {
+      musicOn = true;
+      btnMusic.textContent = "🔊";
+    }).catch(() => {
+      musicOn = false;
+      btnMusic.textContent = "🔇";
+    });
+  }
+
+  $("#btn-start").addEventListener("click", () => {
+    startMusic();
+    showView("quiz");
+  });
+
+  $("#btn-music").addEventListener("click", () => {
+    if (musicOn) {
+      bgm.pause();
+      musicOn = false;
+      $("#btn-music").textContent = "🔇";
+    } else {
+      startMusic();
+    }
+  });
+
+  /* ---------- ①.5 解锁小考验（R / L） ---------- */
+
+  document.querySelectorAll(".quiz-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.answer === "R") {
+        showView("welcome");
+      } else {
+        showFail();
+      }
+    });
+  });
+
+  $("#btn-quiz-retry").addEventListener("click", resetQuiz);
+
+  function showFail() {
+    $("#fail-panel").hidden = false;
+    const overlay = $("#fail-overlay");
+    overlay.innerHTML = "";
+    const N = 26;
+    for (let i = 0; i < N; i++) {
+      const x = document.createElement("span");
+      x.className = "fail-x";
+      x.textContent = "✗";
+      x.style.left = Math.random() * 94 + "%";
+      x.style.top = Math.random() * 94 + "%";
+      x.style.fontSize = Math.round(Math.random() * 26 + 26) + "px";
+      x.style.animationDelay = Math.random() * 0.6 + "s";
+      overlay.appendChild(x);
+    }
+  }
+
+  function resetQuiz() {
+    $("#fail-panel").hidden = true;
+    $("#fail-overlay").innerHTML = "";
+  }
 
   /* ---------- ② 选风格 ---------- */
 
@@ -286,11 +376,6 @@
     $("#btn-confirm").disabled = false;
   }
 
-  $("#btn-back").addEventListener("click", () => {
-    state.giftId = null;
-    state.giftName = null;
-    showView("welcome");
-  });
 
   $("#btn-confirm").addEventListener("click", () => {
     if (!state.giftId || state.submitting) return;
@@ -382,6 +467,8 @@
     const status = $("#msg-status");
     const input = $("#msg-input");
     const btn = $("#btn-send-msg");
+    const mystery = $("#mystery-note");
+    if (mystery) mystery.hidden = !state.msgSent;
 
     if (state.msgSent) {
       status.textContent = "💌 已送达，你的祝福我会转达！";
@@ -425,6 +512,8 @@
       state.msgSent = true;
       localStorage.setItem(MSG_KEY, "1");
       status.textContent = "💌 已送达，你的祝福我会转达！";
+      const mystery = $("#mystery-note");
+      if (mystery) mystery.hidden = false;
       status.className = "msg-status";
       status.hidden = false;
       input.disabled = true;
